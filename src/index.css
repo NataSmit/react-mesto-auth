@@ -57,6 +57,7 @@
 @import url(./blocks/popup/__redirect/popup__redirect.css);
 @import url(./blocks/popup/__tooltip-message/popup__tooltip-message.css);
 @import url(./blocks/popup/__tooltip-img/popup__tooltip-img.css);
+@import url(./blocks/popup/__tooltip-img/_type/popup__tooltip-img_type_error.css);
 @import url(./blocks/popup/__container/_type/popup__container_type_tooltip.css);
 @import url(./blocks/header/__container/header__container.css);
 @import url(./blocks/header/__user/header__user.css);

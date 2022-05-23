@@ -5,4 +5,10 @@
   color: #A9A9A9;
   background-color: transparent;
   border: none;
+  transition: opacity 0.3s;
+}
+
+.header__button:hover {
+  cursor: pointer;
+  opacity: 0.6;
 }

@@ -1,17 +1,19 @@
-import React from 'react';
+import React from "react";
 import closeIcon from "../images/Close-Icon.svg";
+import errorIcon from "../images/InfoToolTip-error.svg";
 
 export default function InfoTooltip(props) {
   return (
-    <div
-    className={`popup  ${
-      props.isOpen ? "popup_opened" : ""
-    }`}
-      
-    >
+    <div className={`popup  ${props.isOpen ? "popup_opened" : ""}`}>
       <div className="popup__container popup__container_type_tooltip">
-        <div className="popup__tooltip-img"></div>
-        <p className="popup__tooltip-message">Вы успешно зарегистрировались!</p>
+        <div
+          className={`${
+            props.successful
+              ? "popup__tooltip-img"
+              : "popup__tooltip-img_type_error"
+          }`}
+        ></div>
+        <p className="popup__tooltip-message">{props.message}</p>
         <button
           onClick={props.onClose}
           type="button"
@@ -22,5 +24,5 @@ export default function InfoTooltip(props) {
         </button>
       </div>
     </div>
-  )
+  );
 }

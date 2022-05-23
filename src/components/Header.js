@@ -8,8 +8,8 @@ function Header(props) {
         <img className="header__logo" src={logoHeader} alt="Логотип Место" />
       </a>
       <div className="header__container">
-        <p className="header__user"></p>
-        <button className="header__button" type="button">{props.buttonName}</button>
+        <p className="header__user">{props.userEmail}</p>
+        <button className="header__button" type="button" onClick={props.handleClick}>{props.buttonName}</button>
       </div>
     </header>
   );

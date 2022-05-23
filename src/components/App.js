@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import { Route, Switch } from 'react-router-dom';
+import { Route, Switch, Redirect, useHistory } from "react-router-dom";
 import logo from "../logo.svg";
 import "../App.css";
 import logoHeader from "../images/logo.svg";
@@ -18,9 +18,11 @@ import AddPlacePopup from "./AddPlacePopup";
 import ConfirmDeleteCardPopup from "./ConfirmDeleteCardPopup";
 import Login from "./Login";
 import Register from "./Register";
-import InfoTooltip from "./InfoTooltip";
+
+import ProtectedRoute from "./ProtectedRoute";
 import { api } from "../utils/Api";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
+import { apiAuth } from "../utils/ApiAuth";
 
 function App() {
   const [currentUser, setCurrentUser] = useState({});
@@ -29,9 +31,13 @@ function App() {
   const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
   const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
   const [isImagePopupOpen, setIsImagePopupOpen] = useState(false);
-  const [isConfirmDeletePopupOpen, setIsConfirmDeletePopupOpen] = useState(false);
+  const [isConfirmDeletePopupOpen, setIsConfirmDeletePopupOpen] =
+    useState(false);
   const [selectedCard, setSelectedCard] = useState({});
   const [cardToBeDeleted, setCardToBeDeleted] = useState({});
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const history = useHistory();
 
   useEffect(() => {
     api
@@ -47,7 +53,42 @@ function App() {
         setCards(res);
       })
       .catch((err) => console.log(err));
+
+    checkToken();
   }, []);
+
+  function handleLogin() {
+    setLoggedIn(true);
+    checkToken();
+  }
+
+  function checkToken() {
+    if (localStorage.getItem("jwt")) {
+      const jwt = localStorage.getItem("jwt");
+      if (jwt) {
+        apiAuth.getUserData(jwt).then((data) => {
+          if (data) {
+            setLoggedIn(true);
+            history.push("/");
+            setUserEmail(data.data.email);
+          }
+        });
+      }
+    }
+  }
+
+  function signOut() {
+    localStorage.removeItem("jwt");
+    history.push("/signin");
+  }
+
+  function redirectToRegistration() {
+    history.push("/signup");
+  }
+
+  function redirectToLogin() {
+    history.push("/signin");
+  }
 
   function handleConfirmDeleteClick(card) {
     setCardToBeDeleted(card);
@@ -131,19 +172,26 @@ function App() {
     <div className="wrapper">
       <CurrentUserContext.Provider value={currentUser}>
         <div className="root">
-         
           <Switch>
-            <Route path='/sign-up'>
-              <Header buttonName={'Войти'}/>
-              <Register/>
+            <Route path="/signup">
+              <Header buttonName={"Войти"} handleClick={redirectToLogin} />
+              <Register />
             </Route>
-    
-            <Route path='/sign-in'>
-              <Header buttonName={'Регистрация'}/>
-              <Login/>
+
+            <Route path="/signin">
+              <Header
+                buttonName={"Регистрация"}
+                handleClick={redirectToRegistration}
+              />
+              <Login handleLogin={handleLogin} />
             </Route>
-            <Route exact path='/'>
-              <Header buttonName={'Выйти'}/>
+
+            <ProtectedRoute exact path="/" loggedIn={loggedIn}>
+              <Header
+                buttonName={"Выйти"}
+                handleClick={signOut}
+                userEmail={userEmail}
+              />
               <Main
                 onEditProfile={handleEditProfileClick}
                 onAddPlace={handleAddPlaceClick}
@@ -154,10 +202,11 @@ function App() {
                 onCardDeleteConfirm={handleConfirmDeleteClick}
                 cards={cards}
               />
-            </Route>
+            </ProtectedRoute>
           </Switch>
           <Footer />
         </div>
+
         <EditProfilePopup
           isOpen={isEditProfilePopupOpen}
           onClose={closeAllPopups}
@@ -184,10 +233,6 @@ function App() {
           isOpen={isImagePopupOpen}
           onClose={closeAllPopups}
         />
-        
-        <InfoTooltip onClose={closeAllPopups}/>
-
-
       </CurrentUserContext.Provider>
     </div>
   );
