@@ -9,7 +9,6 @@ class ApiAuth {
       return res.json();
     }
     return res.json().then((data) => {
-      console.log("inApi", data);
       throw new Error(data.message);
     });
   }

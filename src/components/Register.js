@@ -1,15 +1,10 @@
 import React from "react";
 import { useState } from "react";
-import { useHistory, Link } from "react-router-dom";
-import { apiAuth } from "../utils/ApiAuth";
-import InfoTooltip from "./InfoTooltip";
+import { Link } from "react-router-dom";
 
-export default function Register() {
+export default function Register({ onSignup }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const history = useHistory();
-  const [isInfoTooltipOpen, setIsInfoTooltipOpen] = useState(false);
-  const [message, setMessage] = useState({ successful: false, message: "" });
 
   function handleEmailChange(e) {
     setEmail(e.target.value);
@@ -21,36 +16,7 @@ export default function Register() {
 
   function handleSubmit(e) {
     e.preventDefault();
-    apiAuth
-      .registration(password, email)
-      .then((res) => {
-        if (res) {
-          console.log(res);
-          setIsInfoTooltipOpen(true);
-          setMessage({
-            successful: true,
-            message: "Вы успешно зарегистрировались!",
-          });
-        }
-      })
-      .catch((err) => {
-        setIsInfoTooltipOpen(true);
-        setMessage({
-          successful: false,
-          message: "Что-то пошло не так! Попробуйте ещё раз.",
-        });
-      });
-  }
-
-  function redirectToLogin() {
-    if (message.successful) {
-      history.push("/signin");
-    }
-  }
-
-  function closeInfoTooltip() {
-    setIsInfoTooltipOpen(false);
-    redirectToLogin();
+    onSignup(password, email);
   }
 
   return (
@@ -94,13 +60,6 @@ export default function Register() {
           Уже зарегистрированы? Войти
         </Link>
       </form>
-
-      <InfoTooltip
-        isOpen={isInfoTooltipOpen}
-        onClose={closeInfoTooltip}
-        message={message.message}
-        successful={message.successful}
-      />
     </div>
   );
 }

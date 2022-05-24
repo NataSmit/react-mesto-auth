@@ -3,10 +3,9 @@ import { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { apiAuth } from "../utils/ApiAuth";
 
-export default function Login(props) {
+export default function Login({onSignIn, errorMessage}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const history = useHistory();
 
   function handleEmailChange(e) {
@@ -19,23 +18,7 @@ export default function Login(props) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    apiAuth
-      .login(password, email)
-      .then((data) => {
-        if (data.token) {
-          localStorage.setItem("jwt", data.token);
-          return data;
-        }
-      })
-      .then((data) => {
-        if (data.token) {
-          props.handleLogin();
-          history.push("/");
-        }
-      })
-      .catch((err) => {
-        setErrorMessage(err.toString());
-      });
+    onSignIn(password, email);
   }
 
   return (

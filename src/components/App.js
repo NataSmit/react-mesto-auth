@@ -18,7 +18,7 @@ import AddPlacePopup from "./AddPlacePopup";
 import ConfirmDeleteCardPopup from "./ConfirmDeleteCardPopup";
 import Login from "./Login";
 import Register from "./Register";
-
+import InfoTooltip from "./InfoTooltip";
 import ProtectedRoute from "./ProtectedRoute";
 import { api } from "../utils/Api";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
@@ -37,6 +37,9 @@ function App() {
   const [cardToBeDeleted, setCardToBeDeleted] = useState({});
   const [loggedIn, setLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isInfoTooltipOpen, setIsInfoTooltipOpen] = useState(false);
+  const [message, setMessage] = useState({ successful: false, message: "" });
   const history = useHistory();
 
   useEffect(() => {
@@ -57,6 +60,59 @@ function App() {
     checkToken();
   }, []);
 
+  function handleSignIn(password, email) {
+    apiAuth
+      .login(password, email)
+      .then((data) => {
+        if (data.token) {
+          localStorage.setItem("jwt", data.token);
+          return data;
+        }
+      })
+      .then((data) => {
+        if (data.token) {
+          handleLogin();
+          history.push("/");
+        }
+      })
+      .catch((err) => {
+        setErrorMessage(err.toString());
+      });
+  }
+
+  function handleRegistration(password, email) {
+    apiAuth
+      .registration(password, email)
+      .then((res) => {
+        if (res) {
+          console.log(res);
+          setIsInfoTooltipOpen(true);
+          setMessage({
+            successful: true,
+            message: "Вы успешно зарегистрировались!",
+          });
+        }
+      })
+      .catch((err) => {
+        setIsInfoTooltipOpen(true);
+        setMessage({
+          successful: false,
+          message: "Что-то пошло не так! Попробуйте ещё раз.",
+        });
+      });
+  }
+
+  function redirectToLoginAfterRegistration() {
+    if (message.successful) {
+      redirectToLogin();
+    }
+  }
+
+  function closeInfoTooltip() {
+    setIsInfoTooltipOpen(false);
+    redirectToLoginAfterRegistration();
+  }
+
   function handleLogin() {
     setLoggedIn(true);
     checkToken();
@@ -66,13 +122,16 @@ function App() {
     if (localStorage.getItem("jwt")) {
       const jwt = localStorage.getItem("jwt");
       if (jwt) {
-        apiAuth.getUserData(jwt).then((data) => {
-          if (data) {
-            setLoggedIn(true);
-            history.push("/");
-            setUserEmail(data.data.email);
-          }
-        });
+        apiAuth
+          .getUserData(jwt)
+          .then((data) => {
+            if (data) {
+              setLoggedIn(true);
+              history.push("/");
+              setUserEmail(data.data.email);
+            }
+          })
+          .catch((err) => console.log(err));
       }
     }
   }
@@ -124,7 +183,9 @@ function App() {
     const isLiked = card.likes.some((i) => i._id === currentUser._id);
     // Отправляем запрос в API и получаем обновлённые данные карточки
     api.handleLikeClick(card._id, isLiked).then((newCard) => {
-      setCards((state) => state.map((c) => (c._id === card._id ? newCard : c)));
+      setCards((state) =>
+        state.map((c) => (c._id === card._id ? newCard : c))
+      ).catch((err) => console.log(err));
     });
   }
 
@@ -175,7 +236,7 @@ function App() {
           <Switch>
             <Route path="/signup">
               <Header buttonName={"Войти"} handleClick={redirectToLogin} />
-              <Register />
+              <Register onSignup={handleRegistration} />
             </Route>
 
             <Route path="/signin">
@@ -183,7 +244,7 @@ function App() {
                 buttonName={"Регистрация"}
                 handleClick={redirectToRegistration}
               />
-              <Login handleLogin={handleLogin} />
+              <Login onSignIn={handleSignIn} errorMessage={errorMessage} />
             </Route>
 
             <ProtectedRoute exact path="/" loggedIn={loggedIn}>
@@ -232,6 +293,12 @@ function App() {
           card={selectedCard}
           isOpen={isImagePopupOpen}
           onClose={closeAllPopups}
+        />
+        <InfoTooltip
+          isOpen={isInfoTooltipOpen}
+          onClose={closeInfoTooltip}
+          message={message.message}
+          successful={message.successful}
         />
       </CurrentUserContext.Provider>
     </div>
