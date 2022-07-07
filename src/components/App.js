@@ -43,27 +43,39 @@ function App() {
   const history = useHistory();
 
   useEffect(() => {
-    api
-      .getUserData()
-      .then((res) => {
-        setCurrentUser(res);
-      })
-      .catch((err) => console.log(err));
-
-    api
-      .getInitialCards()
-      .then((res) => {
-        setCards(res);
-      })
-      .catch((err) => console.log(err));
-
-    checkToken();
+   api
+     .getUserData()
+     .then((res) => {
+      console.log('getUserData res', res)
+       setCurrentUser(res);
+     })
+     .catch((err) => console.log(err))
+   api
+     .getInitialCards()
+     .then((res) => {
+       setCards(res);
+     })
+     .catch((err) => console.log(err))
+   checkToken();
   }, []);
+
+  //useEffect(() => {
+  //  Promise.all([api.getUserData(), api.getInitialCards()])
+  //  .then(([userData, serverCards]) => {
+  //    console.log('userData useEff', userData)
+  //    setCurrentUser(userData)
+  //    setCards(serverCards)
+  //  })
+  //  .catch((err) => console.log(err));
+//
+  //  checkToken();
+  //}, [])
 
   function handleSignIn(password, email) {
     apiAuth
       .login(password, email)
       .then((data) => {
+        console.log('handleSignIn: data:', data)
         if (data.token) {
           localStorage.setItem("jwt", data.token);
           return data;
@@ -85,7 +97,7 @@ function App() {
       .registration(password, email)
       .then((res) => {
         if (res) {
-          console.log(res);
+         
           setIsInfoTooltipOpen(true);
           setMessage({
             successful: true,
@@ -116,6 +128,7 @@ function App() {
   function handleLogin() {
     setLoggedIn(true);
     checkToken();
+    
   }
 
   function checkToken() {
@@ -125,10 +138,12 @@ function App() {
         apiAuth
           .getUserData(jwt)
           .then((data) => {
+            console.log('checkToken', data)
             if (data) {
               setLoggedIn(true);
               history.push("/");
-              setUserEmail(data.data.email);
+              setUserEmail(data.email);
+              setCurrentUser(data)          
             }
           })
           .catch((err) => console.log(err));
@@ -137,6 +152,9 @@ function App() {
   }
 
   function signOut() {
+    apiAuth.logout()
+      .then((res) => console.log(res))
+      .catch(err => console.log(err))
     localStorage.removeItem("jwt");
     history.push("/signin");
   }
@@ -180,13 +198,15 @@ function App() {
   }
 
   function handleCardLike(card) {
-    const isLiked = card.likes.some((i) => i._id === currentUser._id);
+    const isLiked = card.likes.some((i) => i === currentUser._id);
     // Отправляем запрос в API и получаем обновлённые данные карточки
-    api.handleLikeClick(card._id, isLiked).then((newCard) => {
+    api.handleLikeClick(card._id, isLiked)
+    .then((newCard) => {
       setCards((state) =>
-        state.map((c) => (c._id === card._id ? newCard : c))
-      ).catch((err) => console.log(err));
-    });
+        state.map((c) => (c._id === card._id ? newCard : c)),
+      )
+    })
+    .catch((err) => console.log(err));
   }
 
   function handleCardDelete() {

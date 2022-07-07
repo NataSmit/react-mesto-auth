@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useContext } from "react";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
 
 export default function Card(props) {
   const currentUser = useContext(CurrentUserContext);
+
 
   function handleClick() {
     props.onCardClick(props.card);
@@ -18,10 +19,11 @@ export default function Card(props) {
   }
 
   // Определяем, являемся ли мы владельцем текущей карточки
-  const isOwn = props.card.owner._id === currentUser._id;
+  const isOwn = props.card.owner === currentUser._id;
 
   // Определяем, есть ли у карточки лайк, поставленный текущим пользователем
-  const isLiked = props.card.likes.some((i) => i._id === currentUser._id);
+  const isLiked = props.card.likes.some((i) => i === currentUser._id);
+
 
   return (
     <article className="elements__card element" key={props.card.id}>
